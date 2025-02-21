@@ -30,27 +30,78 @@ const questions = [
   },
 ];
 
+const questionsElement = document.getElementById("questions");
+const submitButton = document.getElementById("submit");
+const scoreDisplay = document.getElementById("score")
+
+const userAnswers = JSON.parse(sessionStorage.getItem("progress")) || {};
+
 // Display the quiz questions and choices
 function renderQuestions() {
-  for (let i = 0; i < questions.length; i++) {
-    const question = questions[i];
-    const questionElement = document.createElement("div");
-    const questionText = document.createTextNode(question.question);
-    questionElement.appendChild(questionText);
-    for (let j = 0; j < question.choices.length; j++) {
-      const choice = question.choices[j];
+  questionsElement.innerHTML = ""; // Clear previous content
+
+  questions.forEach((question, i) => {
+    const questionDiv = document.createElement("div");
+    questionDiv.classList.add("question");
+
+    // Display question text
+    const questionText = document.createElement("p");
+    questionText.textContent = `${i + 1}. ${question.question}`;
+    questionDiv.appendChild(questionText);
+
+    // Display choices as radio buttons
+    question.choices.forEach(choice => {
       const choiceElement = document.createElement("input");
       choiceElement.setAttribute("type", "radio");
       choiceElement.setAttribute("name", `question-${i}`);
       choiceElement.setAttribute("value", choice);
+
+      // Restore selected choice from session storage
       if (userAnswers[i] === choice) {
-        choiceElement.setAttribute("checked", true);
+        choiceElement.checked = true;
       }
-      const choiceText = document.createTextNode(choice);
-      questionElement.appendChild(choiceElement);
-      questionElement.appendChild(choiceText);
-    }
-    questionsElement.appendChild(questionElement);
+
+      // Save answer on selection
+      choiceElement.addEventListener("change", () => {
+        userAnswers[i] = choice;
+        sessionStorage.setItem("progress", JSON.stringify(userAnswers));
+      });
+
+      const choiceLabel = document.createElement("label");
+      choiceLabel.appendChild(choiceElement);
+      choiceLabel.appendChild(document.createTextNode(choice));
+
+      questionDiv.appendChild(choiceLabel);
+      questionDiv.appendChild(document.createElement("br"));
+    });
+
+    questionsElement.appendChild(questionDiv);
+  });
+
+  // Display last saved score
+  const lastScore = localStorage.getItem("score");
+  if (lastScore !== null) {
+    scoreDisplay.textContent = `Your last score: ${lastScore} out of ${questions.length}`;
   }
 }
+
+function calculateScore() {
+  let score = 0;
+  questions.forEach((question, i) => {
+    if (userAnswers[i] === question.answer) {
+      score++;
+    }
+  });
+
+  // Store final score in local storage
+  localStorage.setItem("score", score);
+  scoreDisplay.textContent = `Your score is ${score} out of ${questions.length}`;
+}
+
+// Load quiz questions on page load
+document.addEventListener("DOMContentLoaded", renderQuestions);
+
+// Submit button event listener
+submitButton.addEventListener("click", calculateScore);
+	
 renderQuestions();
