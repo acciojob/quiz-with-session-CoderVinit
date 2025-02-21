@@ -104,4 +104,3 @@ document.addEventListener("DOMContentLoaded", renderQuestions);
 // Submit button event listener
 submitButton.addEventListener("click", calculateScore);
 	
-renderQuestions();
